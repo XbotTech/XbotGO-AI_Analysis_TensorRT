@@ -1,2 +1,2 @@
 TensorRT-10.14.1.48
-build/
+build/*.tar.gz

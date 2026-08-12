@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  xbotgo-tensorrt:
+    image: xbotgo-tensorrt:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    volumes:
+      # 挂载数据目录（视频文件、输出 JSON）
+      - ./data:/data
+      # 挂载模型目录（ONNX + engine 文件）
+      - ./model:/workspace/model
+    # 保持容器运行，方便交互式使用
+    stdin_open: true
+    tty: true
+    command: bash
+    # 也可以直接运行检测任务:
+    # command: detect /workspace/model/xxx.engine /data/test.mp4 /data/output.json
+    # command: refine /workspace/model/xxx.engine /data/test.mp4
+    # command: build-engine
