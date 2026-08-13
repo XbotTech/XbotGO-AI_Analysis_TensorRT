@@ -3,25 +3,31 @@
 基于 TensorRT 的 YOLOv11 目标检测与篮球跟踪细化，C++ 实现。
 
 ## 依赖
+使用docker无需关注，只作为记录
 
 - CUDA Toolkit
 - TensorRT 10.14.1.48
 - OpenCV 4.6.0
 - CMake ≥ 3.12
 
-## 快速开始
-
-1. 修改 `build_and_run.sh` 顶部两个路径变量：
+## 快速开始（Docker）
 
 ```bash
-TENSORRT_DIR="$ROOT/TensorRT-10.14.1.48"             # TensorRT 安装目录
-OpenCV_DIR="/home/xiaodai/miniconda3/envs/opencv_cpp/lib/cmake/opencv4"  # OpenCV cmake 目录
-```
+# 1. 构建镜像
+docker build -t xbotgo-tensorrt:latest .
 
-2. 一键构建 + 运行：
+# 2. 生成 engine（T4 上首次运行）
+docker run --gpus all -it --rm \
+    -v $(pwd)/model:/workspace/model \
+    xbotgo-tensorrt:latest \
+    build-engine
 
-```bash
-./build_and_run.sh
+# 3. 检测
+docker run --gpus all -it --rm \
+    -v $(pwd)/model:/workspace/model \
+    -v $(pwd)/data:/data \
+    xbotgo-tensorrt:latest \
+    detect
 ```
 
 ## 产出
@@ -46,17 +52,6 @@ cpp.refine_ball("<engine>", "<video>")    # → ball boxes JSON
 
 ## Docker 部署（推荐用于 T4 / GPU 服务器）
 
-### 前提
-
-- T4 服务器已安装 NVIDIA 驱动（≥ 525）、nvidia-container-toolkit、Docker
-- 本机已登录 NGC Registry：
-
-```bash
-docker login nvcr.io
-# Username: $oauthtoken
-# Password: <NGC API Key>（在 https://ngc.nvidia.com/setup/api-key 生成）
-```
-
 ### 文件说明
 
 | 文件                     | 用途                                                                               |
@@ -65,34 +60,30 @@ docker login nvcr.io
 | `.dockerignore`        | 排除 build 产物、测试视频等不必要文件                                              |
 | `docker-entrypoint.sh` | 统一入口，封装`build-engine` / `detect` / `refine` 子命令                    |
 | `docker-compose.yml`   | 一键启动交互式容器                                                                 |
-| `deploy.sh`            | 一键：构建 → 导出 → scp 上传 → T4 上导入                                        |
 
-### 方式一：deploy.sh 一键部署
+### 部署步骤（在 T4 上直接构建）
+
+**1. 登录 T4 服务器：**
 
 ```bash
-# 构建镜像 → 导出 tar.gz → scp 上传到 T4 → 自动导入
-./deploy.sh <T4服务器IP> [用户名]
-
-# 示例
-./deploy.sh 192.168.1.100 ubuntu
+ssh user@t4-server
 ```
 
-### 方式二：手动部署
+**2. 获取源码（两种方式任选）：**
 
-**本地构建镜像：**
+```bash
+# 方式 a: git clone
+git clone <你的仓库地址>
+cd XbotGO-AI_Analysis_TensorRT-main
+
+# 方式 b: scp 上传本地源码
+scp -r . user@t4-server:~/XbotGO-AI_Analysis_TensorRT-main
+```
+
+**3. 在 T4 上构建镜像：**
 
 ```bash
 docker build -t xbotgo-tensorrt:latest .
-```
-
-**导出并上传到 T4 服务器：**
-
-```bash
-docker save xbotgo-tensorrt:latest | gzip > xbotgo-tensorrt.tar.gz
-scp xbotgo-tensorrt.tar.gz user@t4-server:~/
-
-# 在 T4 上导入
-ssh user@t4-server "docker load < ~/xbotgo-tensorrt.tar.gz"
 ```
 
 ### T4 上运行
