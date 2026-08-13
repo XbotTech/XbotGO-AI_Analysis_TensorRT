@@ -1,3 +1,6 @@
 TensorRT-10.14.1.48
 build/*.tar.gz
 build
+*.engine
+*.tar.gz
+*.tar.gz.1

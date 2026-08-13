@@ -97,7 +97,7 @@ if __name__ == "__main__":
     # Example usage:
     cpp_exec = CppExecCall()
     cpp_exec.extract_info(
-        video="./test.mp4",
+        video="./data/test.mp4",
         output_json="detect.json",
         detect_exec="build/exec_detect_video",
         detect_engine="model/yolo11s_person_basketball_backboard_hoop_1920_1088_AIAnalysi1_without_nms_batch4.engine",

@@ -113,13 +113,10 @@ docker run --gpus all -it --rm \
     -v $(pwd)/model:/workspace/model \
     -v $(pwd)/data:/data \
     xbotgo-tensorrt:latest \
-    detect \
-    /workspace/model/<engine文件> \
-    /data/<视频文件> \
-    /data/detect.json
+    detect
 ```
 
-**3. 篮球跟踪细化：**
+<!-- **3. 篮球跟踪细化：**
 
 ```bash
 docker run --gpus all -it --rm \
@@ -129,7 +126,7 @@ docker run --gpus all -it --rm \
     refine \
     /workspace/model/<engine文件> \
     /data/<视频文件>
-```
+``` -->
 
 **4. 交互式进入容器：**
 

@@ -2,6 +2,11 @@
 build/
 *.engine
 
+# Data / model / large binaries
+data/
+*.tar.gz
+*.tar.gz.1
+
 # IDE / editor
 .vscode/
 .idea/

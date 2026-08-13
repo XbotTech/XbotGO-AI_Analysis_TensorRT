@@ -48,7 +48,7 @@ echo ""
 echo "============================================"
 echo " Step 3/4: Run full-frame detection"
 echo "============================================"
-VIDEO="test.mp4"
+VIDEO="data/test.mp4"
 OUTPUT_JSON="testcpp.json"
 
 echo "[RUN] ./build/exec_detect_video $ENGINE $VIDEO $OUTPUT_JSON"

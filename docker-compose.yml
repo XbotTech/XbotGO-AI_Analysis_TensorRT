@@ -10,10 +10,10 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
     volumes:
+      # 挂载数据目录（视频文件、输出 JSON）
+      - ./data:/data
       # 挂载模型目录（ONNX + engine 文件）
       - ./model:/workspace/model
-      # 挂载单个视频文件
-      - ./test.mp4:/data/test.mp4
     # 保持容器运行，方便交互式使用
     stdin_open: true
     tty: true
