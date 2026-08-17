@@ -467,10 +467,16 @@ void YOLOv11::build(std::string onnxPath, nvinfer1::ILogger& logger)
         profile->setDimensions(network->getInput(0)->getName(), OptProfileSelector::kMAX,
                                Dims4{4, input_dims.d[1], input_dims.d[2], input_dims.d[3]});
         config->addOptimizationProfile(profile);
-        printf("Optimization profile: MIN=[1,%d,%d,%d] OPT=[4,%d,%d,%d] MAX=[4,%d,%d,%d]\n",
-               input_dims.d[1], input_dims.d[2], input_dims.d[3],
-               input_dims.d[1], input_dims.d[2], input_dims.d[3],
-               input_dims.d[1], input_dims.d[2], input_dims.d[3]);
+        printf("Optimization profile: MIN=[1,%lld,%lld,%lld] OPT=[4,%lld,%lld,%lld] MAX=[4,%lld,%lld,%lld]\n",
+               static_cast<long long>(input_dims.d[1]),
+               static_cast<long long>(input_dims.d[2]),
+               static_cast<long long>(input_dims.d[3]),
+               static_cast<long long>(input_dims.d[1]),
+               static_cast<long long>(input_dims.d[2]),
+               static_cast<long long>(input_dims.d[3]),
+               static_cast<long long>(input_dims.d[1]),
+               static_cast<long long>(input_dims.d[2]),
+               static_cast<long long>(input_dims.d[3]));
     }
 
     IHostMemory* plan{ builder->buildSerializedNetwork(*network, *config) };

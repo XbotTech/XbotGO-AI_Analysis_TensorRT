@@ -67,17 +67,35 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libopencv-imgproc406t64 \
         libopencv-imgcodecs406t64 \
         libopencv-videoio406t64 \
+        libopencv-dnn406t64 \
+        python3-minimal \
+        python3-venv \
     && rm -f /usr/lib/x86_64-linux-gnu/libnvinfer_builder_resource.so* \
+    && python3 -m venv /opt/venv \
+    && /opt/venv/bin/python -m pip --version \
     && rm -rf /var/lib/apt/lists/*
+
+ENV PATH="/opt/venv/bin:${PATH}" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
 # -------------------- Runtime artifacts --------------------
 WORKDIR /workspace
 COPY --from=builder /workspace/build/exec_detect_video /usr/local/bin/exec_detect_video
 COPY --from=builder /workspace/build/exec_yolo_refine  /usr/local/bin/exec_yolo_refine
 
+# Keep compatibility with callers that still use the old build-tree paths.
+# These are symlinks, so the binaries are not duplicated in the image.
+RUN mkdir -p /workspace/build \
+    && ln -s /usr/local/bin/exec_detect_video /workspace/build/exec_detect_video \
+    && ln -s /usr/local/bin/exec_yolo_refine /workspace/build/exec_yolo_refine
+
 # Catch missing link-time dependencies without requiring a GPU during build.
 RUN test -x /usr/local/bin/exec_detect_video \
     && test -x /usr/local/bin/exec_yolo_refine \
+    && command -v python >/dev/null \
+    && python -m pip --version \
     && ! ldd /usr/local/bin/exec_detect_video | grep -q "not found" \
     && ! ldd /usr/local/bin/exec_yolo_refine | grep -q "not found"
 
@@ -86,4 +104,4 @@ COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod 0755 /usr/local/bin/docker-entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["help"]
+CMD ["/bin/bash"]

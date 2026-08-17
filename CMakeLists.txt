@@ -48,7 +48,7 @@ set(HEADERS
 # Only link the OpenCV modules used by the two runtime executables.  Keeping the
 # component list explicit also lets the runtime image install just these shared
 # libraries instead of the full OpenCV development package.
-find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs videoio)
+find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs videoio dnn)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 include_directories(${TENSORRT_DIR}/include)
