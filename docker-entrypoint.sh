@@ -1,58 +1,57 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-# ============================================================
-# Docker entrypoint — handles ONNX → engine conversion + run
-# ============================================================
+show_help() {
+    cat <<'EOF'
+Usage:
+  detect <engine> <video> [output.json] [output.mp4|None] [conf]
+  refine <events.json> <video> <engine> [output.json] [refine options...]
 
-ONNX_DIR="/workspace/model"
-ENGINE_DIR="/workspace/model"
+Examples:
+  detect /models/detect.engine /data/input.mp4 /output/detect.json None 0.3
+  refine /data/events.json /data/input.mp4 /models/refine.engine /output/refine.json
 
-# If no command given, drop into bash
-if [ $# -eq 0 ]; then
-    exec bash
+Models and input/output data are not included in the image; mount them with
+docker run -v. Any other command is executed directly.
+EOF
+}
+
+if [ "$#" -eq 0 ]; then
+    show_help
+    exit 0
 fi
 
 case "$1" in
-    # --------------------------------------------------
-    # build-engine: ONNX → TensorRT engine
-    #   docker run --gpus all <image> build-engine [model.onnx]
-    # --------------------------------------------------
-    build-engine)
-        ONNX="${2:-$ONNX_DIR/yolo11s_person_basketball_backboard_hoop_1920_1088_AIAnalysi1_without_nms_batch4.onnx}"
-        echo "[INFO] Building TensorRT engine from: $ONNX"
-        /workspace/build/yolov11-tensorrt "$ONNX"
-        echo "[INFO] Done. Engine saved to: $ONNX_DIR"
+    help|-h|--help)
+        show_help
         ;;
-
-    # --------------------------------------------------
-    # detect: full-frame detection on video
-    #   docker run --gpus all -v /host/data:/data <image> detect <engine> <video> [output.json]
-    # --------------------------------------------------
     detect)
-        ENGINE="${2:-$ONNX_DIR/yolo11s_person_basketball_backboard_hoop_1920_1088_AIAnalysi1_without_nms_batch4.engine}"
-        VIDEO="${3:-/data/test.mp4}"
-        OUTPUT="${4:-/data/detect.json}"
-        echo "[INFO] Running detection: engine=$ENGINE video=$VIDEO output=$OUTPUT"
-        /workspace/build/exec_detect_video "$ENGINE" "$VIDEO" "$OUTPUT"
-        echo "[INFO] Detection complete → $OUTPUT"
+        if [ "$#" -lt 3 ]; then
+            echo "[ERROR] detect requires <engine> and <video>." >&2
+            show_help >&2
+            exit 2
+        fi
+        engine="$2"
+        video="$3"
+        output_json="${4:-/data/detect.json}"
+        output_video="${5:-None}"
+        confidence="${6:-0.3}"
+        exec /usr/local/bin/exec_detect_video \
+            "$engine" "$video" "$output_json" "$output_video" "$confidence"
         ;;
-
-    # --------------------------------------------------
-    # refine: tracking-guided ball refinement
-    #   docker run --gpus all -v /host/data:/data <image> refine <engine> <video>
-    # --------------------------------------------------
     refine)
-        ENGINE="${2:-$ONNX_DIR/yolo11s_person_basketball_backboard_hoop_1920_1088_AIAnalysi1_without_nms_batch4.engine}"
-        VIDEO="${3:-/data/test.mp4}"
-        echo "[INFO] Running ball refinement: engine=$ENGINE video=$VIDEO"
-        /workspace/build/exec_yolo_refine "$ENGINE" "$VIDEO"
-        echo "[INFO] Refinement complete."
+        if [ "$#" -lt 4 ]; then
+            echo "[ERROR] refine requires <events.json>, <video>, and <engine>." >&2
+            show_help >&2
+            exit 2
+        fi
+        events_json="$2"
+        video="$3"
+        engine="$4"
+        shift 4
+        exec /usr/local/bin/exec_yolo_refine \
+            "$events_json" "$video" "$engine" "$@"
         ;;
-
-    # --------------------------------------------------
-    # shell / custom command
-    # --------------------------------------------------
     *)
         exec "$@"
         ;;

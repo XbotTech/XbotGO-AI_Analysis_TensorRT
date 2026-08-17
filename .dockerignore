@@ -4,6 +4,7 @@ build/
 
 # Data / model / large binaries
 data/
+model/
 *.tar.gz
 *.tar.gz.1
 

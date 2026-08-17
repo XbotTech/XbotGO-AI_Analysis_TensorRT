@@ -45,7 +45,10 @@ set(HEADERS
 # -------------------------------------------------------------------
 # OpenCV_DIR 和 TENSORRT_DIR 由 cmake -D 传入，未传入则报错
 
-find_package(OpenCV REQUIRED)
+# Only link the OpenCV modules used by the two runtime executables.  Keeping the
+# component list explicit also lets the runtime image install just these shared
+# libraries instead of the full OpenCV development package.
+find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs videoio)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 include_directories(${TENSORRT_DIR}/include)
